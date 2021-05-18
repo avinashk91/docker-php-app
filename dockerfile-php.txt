@@ -1,0 +1,120 @@
+FROM php:7.3-apache
+
+COPY . /app
+
+COPY .docker/vhost.conf /etc/apache2/sites-available/000-default.conf
+
+RUN chown -R www-data:www-data /app && a2enmod rewrite
+
+
+To build the image
+-------------------
+
+docker build –file .docker/Dockerfile \ -t docker-php-app  .
+
+
+Running the Server
+------------------
+
+docker run –rm -p 8080:80 docker-php-app
+
+
+Writing the docker-compose.yml File
+-----------------------------------
+version: ‘3’
+
+services:
+
+  docker-tutorial:
+
+    build:
+
+      context: .
+
+      dockerfile: .docker/Dockerfile
+
+    image: docker-php-app
+
+    ports:
+
+      – 8080:80
+
+
+From the project root, run:
+
+docker-compose up
+
+
+Adding a Database
+------------------
+docker-compose.yml file.
+
+version: ‘3’
+
+services:
+
+  docker-tutorial:
+
+    …
+
+    links:
+
+      – mysql
+
+    environment:
+
+      DB_HOST: mysql
+
+      DB_DATABASE: docker
+
+      DB_USERNAME: docker
+
+      DB_PASSWORD: docker
+
+  mysql:
+
+    image: mysql:5.7
+
+    ports:
+
+      – 13306:3306
+
+    environment:
+
+      MYSQL_DATABASE: docker
+
+      MYSQL_USER: docker
+
+      MYSQL_PASSWORD: docker
+
+      MYSQL_ROOT_PASSWORD: docker
+
+
+Running Commands for the docker container:
+-------------------------------------------
+FROM php:7.3-apache 
+
+RUN apt-get update
+
+RUN apt-get install -y libzip-dev libjpeg62-turbo-dev libpng-dev libfreetype6-dev
+
+# Install extensions
+
+RUN docker-php-ext-install pdo_mysql mbstring zip exif pcntl
+
+RUN docker-php-ext-configure gd –with-gd –with-freetype-dir=/usr/include/ –with-jpeg-dir=/usr/include/ –with-png-dir=/usr/include/
+
+RUN docker-php-ext-install gd
+
+RUN mkdir /app
+
+COPY .docker/vhost.conf /etc/apache2/sites-available/000-default.conf 
+
+WORKDIR /app
+
+RUN chown -R www-data:www-data /app && a2enmod rewrite
+
+
+
+docker-compose up -d –build
+docker-compose exec docker-php-app /bin/bash
